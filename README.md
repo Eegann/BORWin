@@ -19,8 +19,8 @@ C++ compiler g++
 
 ## Instance descrption
 An instance file is as follows.
-The names to replace by the proper values are between { }
-Comments to remove are between [ ]
+The names that must be replaced by the proper values are between { }
+Comments that must be removed are between [ ]
 
 ````
 [the Following block is to be repeated for each node]
@@ -31,9 +31,9 @@ source {source node ID} target {target node ID}
 
 ### Example of instance
 the following is [this instance file](data/instance_example.txt) corresponding to [this graph](graph_example.pdf) where:
-  - The orange brackets are the resource windows
-  - In blue is the value of an arc
-  - In green is the resource of an arc  
+  - The resource window of a vertex is in orange
+  - The value of an arc is in blue
+  - The resource of an arc is in green  
 
 ````
 id 0 minResource 0 maxResource 0 arcs
