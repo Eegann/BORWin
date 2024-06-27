@@ -30,7 +30,7 @@ source {source node ID} target {target node ID}
 ````
 
 ### Example of instance
-the following is [this instance file](data/test_file.txt) corresponding to [this graph](GRAPH_EXAMPLE.pdf) where:
+the following is [this instance file](data/instance_example.txt) corresponding to [this graph](graph_example.pdf) where:
   - The orange brackets are the resource windows
   - In blue is the value of an arc
   - In green is the resource of an arc  
