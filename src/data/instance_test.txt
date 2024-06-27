@@ -1,0 +1,10 @@
+id 0 minResource 0 maxResource 0 arcs
+	to 1 value 5 resource 10
+	to 2 value 1 resource 4
+id 1 minResource 5 maxResource 10 arcs
+	to 2 value 4 resource 6
+	to 3 value 10 resource 2
+id 2 minResource 4 maxResource 20 arcs
+	to 3 value 8 resource 8
+id 3 minResource 12 maxResource 25
+source 0 target 3
