@@ -6,7 +6,7 @@
 #include "algorithm"
 #include "chrono"
 
-Path shortestPath(Graph* g, double coefValue, double coefResource);
+Path longestPath(Graph* g, double coefValue, double coefResource);
 
 Path getOptimisticPath(std::string node, Graph* g, double coefValue, double coefResource, std::unordered_map<std::string,Path>* optimisticPaths);
 
