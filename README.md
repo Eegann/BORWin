@@ -29,8 +29,8 @@ Comments that must be removed are between [ ].
 
 ````
 [the Following block is to be repeated for each node]
-id {node ID} minResource {minimum resource to access the node} maxResource {maximum resource to access the node} arcs
-	to {target node ID} value {value of the arc} resource {resource of the arc} [repeat the line for each arc from the node]
+id {node ID} minResource {minimum resource to access the node} maxResource {maximum resource to access the node}|to {target node ID} value {value of the arc} resource {resource of the arc} [repeat the for each arc from the node]
+[repeat for each node]
 source {source node ID} target {target node ID}
 ````
 
