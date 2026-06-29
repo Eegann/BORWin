@@ -24,5 +24,11 @@ BORWin: BORWin.o Graph.o
 BORWin.o: BORWin.cpp BORWin.h
 	$(CCC) -c $(CCOPT) BORWin.cpp -o bin/BORWin.o
 
+Generator: Generator.o Graph.o
+	$(CCC) $(CCOPT) bin/Generator.o bin/Graph.o -o Generator
+
+Generator.o: Generator.cpp Generator.h
+	$(CCC) -c $(CCOPT) Generator.cpp -o bin/Generator.o
+
 Graph.o: Graph.cpp Graph.h
 	$(CCC) -c $(CCFLAGS) $(CCLNDIRS) Graph.cpp -o bin/Graph.o

@@ -10,7 +10,8 @@
 #include "vector"
 #include "string"
 #include "list"
-
+#include "set"
+#include "filesystem"
 
 #define INF DBL_MAX
 
@@ -30,7 +31,13 @@ struct Graph{
 	std::unordered_map<std::string, Node> nodes;
 	std::string sourceNode;
 	std::string targetNode;
+
+	template<class Archive>
+	void serialize(Archive& ar){
+		ar(nodes, sourceNode, targetNode);
+	}
 };
+
 struct Path{
 	std::list<std::string> nodes;
 	double value=0.0;
@@ -44,8 +51,12 @@ struct HybridPath{
 
 Graph readGraph(std::string fileName);
 
+void writeGraph(Graph g, int numberNodes, std::string fileName);
+
 void tokenize(std::string const &str, const char delim,
             std::vector<std::string> &out);
+
+Path longestPath(Graph* g, double coefValue, double coefResource);
 
 void printGraph(Graph g);
 

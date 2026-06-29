@@ -5,7 +5,7 @@ using namespace std;
 
 int main(int argc, char** argv){
 	if(argc!=2){
-                cerr << "usage: "<< argv[0]<<"\n\t graph_file" << endl;
+                cerr << "usage: "<< argv[0]<<"\n\t graphFile" << endl;
 		return -1;
 	}
         string graphFile = argv[1];
@@ -19,8 +19,10 @@ int main(int argc, char** argv){
 	int nbIter=0;
 
 	auto startFirstPhaseTime=chrono::high_resolution_clock::now();
+	cout << "### FIRST PHASE ###" << endl;
 	firstPhase(&g, &coefValue, &coefResource);
 	auto endFirstPhaseTime=chrono::high_resolution_clock::now();
+	cout << "### SECOND PHASE ###" << endl;
 	secondPhase(&g, coefValue, coefResource, &bestPath, &nbIter);
 	auto endSecondPhaseTime=chrono::high_resolution_clock::now();
 	double timeFirstPhase=double(chrono::duration_cast<chrono::milliseconds>(endFirstPhaseTime - startFirstPhaseTime).count())/1000;
@@ -178,8 +180,8 @@ void secondPhase(Graph* g, double coefValue, double coefResource, Path* bestPath
 		//Print information every 5 seconds
 		if (chrono::duration_cast<chrono::seconds>(currentTime - startTime).count()>nextPrintTime){
 			nextPrintTime+=5;
-			cout << "Max Min aggregatedValues: " << hybridPaths.front().aggregatedValue << " " << hybridPaths.back().aggregatedValue << " lowerBound: ";
-			cout << lowerBoundAggregatedValue << endl;
+			cout << "Max aggregatedValues: " << hybridPaths.front().aggregatedValue << " Min aggregatedValues: " << hybridPaths.back().aggregatedValue;
+			cout << " lowerBound: " << lowerBoundAggregatedValue << endl;
 		}
 
 		//Select and remove from hybridPaths the first path of hybridPaths, i.e., the one with the highest aggregated value.
@@ -261,6 +263,8 @@ void secondPhase(Graph* g, double coefValue, double coefResource, Path* bestPath
 	//Print the solution
 	cout << "\nSolution:" << endl;
 	printPath(*bestPath);
+	
+	/*
 	double value=0.0;
 	for(auto it=bestPath->nodes.begin(); it!=bestPath->nodes.end(); it++){
 		auto succ=it;
@@ -269,87 +273,21 @@ void secondPhase(Graph* g, double coefValue, double coefResource, Path* bestPath
 			value+=g->nodes[*it].arcs[*succ].value;
 	}
 	cout << value << endl;
+	*/
 }
-/**
- * Computes the longest path in a directed acyclic graph considering an aggregated value
- *
- * @param Graph* g: pointer to the graph used
- * @param double coefResource, coefValue: the coefficient respectively for the resource and the value
- *
- * @return the Path "p" being the longest path in "g"
- *
- * @see firstPhase()
- * @see getOptimisticPath()
- */
-Path longestPath(Graph* g, double coefValue, double coefResource){
-	//maps each node "u" to the value of the longest path form the source node to "u"
-	unordered_map<string, double> longestValue;
-
-	//maps each node "u" to its predecessor in the longest path form the source node to "u"
-	unordered_map<string, string> longestPrevious;
-
-	//set of nodes to open (element can only exist once in a set, no duplicates)
-	set<string> nodesToOpen;
-
-	// initializ the longest values to INF for all nodes exept the source node for which it's 0
-	for(auto it=g->nodes.begin(); it!=g->nodes.end(); it++){
-		longestValue[it->first]=INF;
-	}
-	longestValue[g->sourceNode]=0.0;
-
-	
-	nodesToOpen.insert(g->sourceNode);
-
-	double newValue;
-
-	string currentNode;
-	//core loop of the algorithm
-	while(nodesToOpen.size()>0){
-		//retrieve the first node of the list of nodes to open
-		currentNode=(*nodesToOpen.begin());
-		//for each neighbor of the node to open
-		for(auto arcIt=g->nodes[currentNode].arcs.begin(); arcIt!=g->nodes[currentNode].arcs.end(); arcIt++){
-			if(longestValue[currentNode]<INF-1){
-				//compute the new value
-				newValue=longestValue[currentNode]+coefResource*arcIt->second.resource + coefValue*arcIt->second.value;
-				//update the value and the predecessors of a node "u" if the new value is better than best value for "u" so far, or if no value exists for "u"
-				if(newValue>longestValue[arcIt->second.to] or longestValue[arcIt->second.to]>=INF-1){
-					nodesToOpen.insert(arcIt->second.to);
-					longestValue[arcIt->second.to]=newValue;
-					longestPrevious[arcIt->second.to]=currentNode;
-				}
-			}
-		}
-		nodesToOpen.erase(currentNode);
-	}
-	
-	Path p;
-	p.nodes.push_back(g->targetNode);
-	currentNode=g->targetNode;
-	while(currentNode!=g->sourceNode){
-		p.nodes.push_front(longestPrevious[currentNode]);
-		currentNode=longestPrevious[currentNode];
-	}
-	p.value=0.0;
-	p.resource=0.0;
-	for(auto nodeIt=p.nodes.begin(); nodeIt!=--p.nodes.end(); nodeIt++){
-		auto successorIt=nodeIt;
-		successorIt++;
-		p.value+=g->nodes[*nodeIt].arcs[*(successorIt)].value;
-		p.resource+=g->nodes[*nodeIt].arcs[*(successorIt)].resource;
-	}
-	return p;
-}
-
 /**
  * Writes the solution to a CSV file
  * Write the solution in a CSV file
  */
 void writeData(Path bestPath, string graphFile, double timeFirstPhase, double timeSecondPhase, int nbIter){
+	
+	vector<string> pathTokens;
+	tokenize(graphFile, '/', pathTokens);
+	if(pathTokens.size()>1){
+		filesystem::create_directory("../out/"+pathTokens[0]);
+	}
 
-	string fileOut = "../out/"+graphFile;
-	fileOut.erase(fileOut.size()-3);
-	fileOut+="csv";
+	string fileOut = "../out/"+graphFile+".csv";
 	cout << "Result written at: " << fileOut << endl;
 
         ofstream result(fileOut.c_str(), ios::out);

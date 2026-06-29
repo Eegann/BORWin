@@ -2,11 +2,8 @@
 #define BORWIN_H
 
 #include "Graph.h"
-#include "set"
 #include "algorithm"
 #include "chrono"
-
-Path longestPath(Graph* g, double coefValue, double coefResource);
 
 Path getOptimisticPath(std::string node, Graph* g, double coefValue, double coefResource, std::unordered_map<std::string,Path>* optimisticPaths);
 
