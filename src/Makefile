@@ -15,7 +15,7 @@ CCOPT = -m64 -O -fPIC -fno-strict-aliasing -fexceptions -DNDEBUG -DIL_STD -Wno-i
 CCFLAGS = $(CCOPT)
 
 
-all: BORWin
+all: BORWin Generator
 
 
 BORWin: BORWin.o Graph.o
