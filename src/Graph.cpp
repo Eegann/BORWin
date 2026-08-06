@@ -228,3 +228,20 @@ void printHybridPath(HybridPath h){
 	printPath(h.heuristicPart);
 	std::cout << "Aggregated value: " << h.aggregatedValue << std::endl;
 }
+
+/**
+ * count number of arcs
+ * @param Graph g: the graph to be printed
+ */
+int countArcs(Graph *g){
+
+        int nbArcs=0;
+        for(int id=0; id < g->nodes.size(); id++){
+                string nodeID=to_string(id);
+                for(auto it=g->nodes[nodeID].arcs.begin(); it!=g->nodes[nodeID].arcs.end(); it++){
+                nbArcs++;
+                }
+        }
+        return nbArcs;
+}
+

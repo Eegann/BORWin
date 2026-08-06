@@ -59,5 +59,6 @@ void printPath(Path p);
 
 void printHybridPath(HybridPath h);
 
+int countArcs(Graph *g);
 
 #endif

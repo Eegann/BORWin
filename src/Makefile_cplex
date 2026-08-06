@@ -49,9 +49,6 @@ BORWin: BORWin.o Graph.o
 	$(CCC) $(CCOPT) bin/BORWin.o bin/Graph.o -o BORWin
 
 BORWin.o: BORWin.cpp BORWin.h
-	$(CCC) $(CCOPT) bin/BORWin.o bin/Graph.o -o BORWin
-
-BORWin.o: BORWin.cpp BORWin.h
 	$(CCC) -c $(CCOPT) BORWin.cpp -o bin/BORWin.o
 
 Generator: Generator.o Graph.o
