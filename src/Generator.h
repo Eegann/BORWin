@@ -13,4 +13,8 @@ double makeRandomDouble(double minValue, double maxValue);
 
 void makeResourceWindows(Graph* g);
 
+void makeProportionatedGraph(Graph* g, int numberNodes);
+
+void makeTightBoundsGraph(Graph* g);
+
 #endif

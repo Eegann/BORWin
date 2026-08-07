@@ -1,4 +1,5 @@
 #include "Graph.h"
+#include <unistd.h>
 
 using namespace std;
 
@@ -46,8 +47,9 @@ Graph readGraph(std::string fileName){
 			nodeTokens.clear();
 			tokenize(lineTokens[0], ' ', nodeTokens);
 			currentNode.id=nodeTokens[1];
-			currentNode.minResource=std::stod(nodeTokens[3]);
-			currentNode.maxResource=std::stod(nodeTokens[5]);
+			currentNode.level=std::stoi(nodeTokens[3]);
+			currentNode.minResource=std::stod(nodeTokens[5]);
+			currentNode.maxResource=std::stod(nodeTokens[7]);
 			currentNode.arcs.clear();
 
 			for(int i=1; i<lineTokens.size(); i++){
@@ -75,27 +77,29 @@ Graph readGraph(std::string fileName){
  * @param int numberNodes: the number of nodes in the graph
  * @param string folderName: name of the folder in which we store the graph data file
  */
-void writeGraph(Graph g, int numberNodes, string folderName){
+void writeGraph(Graph g, int numberNodes, string folderName, string type){
 	
 	int i=1;
 
-	filesystem::create_directory("../data/"+folderName);
+
+	filesystem::create_directory("../data/type_"+type);
+	filesystem::create_directory("../data/type_"+type+"/"+folderName);
 	
-	ifstream tempFichier("../data/"+folderName+"/instance_"+to_string(i)+".txt");
+	ifstream tempFichier("../data/type_"+type+"/"+folderName+"/instance_"+to_string(i)+".txt");
 
 	while (tempFichier.good()){
 		tempFichier.close();
 		i += 1;
-		tempFichier.open("../data/"+folderName+"/instance_"+to_string(i)+".txt");
+		tempFichier.open("../data/type_"+type+"/"+folderName+"/instance_"+to_string(i)+".txt");
 	} 
 	tempFichier.close();
 	
 	
-  	ofstream graphFile("../data/"+folderName+"/instance_"+to_string(i)+".txt");
+  	ofstream graphFile("../data/type_"+type+"/"+folderName+"/instance_"+to_string(i)+".txt");
 
 	for(int id=0; id < numberNodes; id++){
 		string nodeID = to_string(id);
-		graphFile << "id " << g.nodes[nodeID].id << " minResource " << g.nodes[nodeID].minResource << " maxResource " << g.nodes[nodeID].maxResource;
+		graphFile << "id " << g.nodes[nodeID].id << " level " << g.nodes[nodeID].level << " minResource " << g.nodes[nodeID].minResource << " maxResource " << g.nodes[nodeID].maxResource;
 		for(auto it=g.nodes[nodeID].arcs.begin(); it!=g.nodes[nodeID].arcs.end(); it++){
 			graphFile << "|to " << it->second.to << " value " << it->second.value << " resource " << it->second.resource;
 		}
@@ -103,7 +107,7 @@ void writeGraph(Graph g, int numberNodes, string folderName){
 	}
 	graphFile << "source " << g.sourceNode << " target " << g.targetNode << endl;
 	graphFile.close();
-	cout << "Graph written at: " << ("../data/"+folderName+"/instance_"+to_string(i)+".txt").c_str() << endl;
+	cout << "Graph written at: " << ("../data/type_"+type+"/"+folderName+"/instance_"+to_string(i)+".txt").c_str() << endl;
 }
 
 /**
@@ -145,45 +149,52 @@ Path longestPath(Graph* g, double coefValue, double coefResource){
 	//maps each node "u" to its predecessor in the longest path form the source node to "u"
 	unordered_map<string, string> longestPrevious;
 
-	//set of nodes to open (element can only exist once in a set, no duplicates)
-	set<string> nodesToOpen;
+	//vector of nodes to open
+	vector<string> nodesToOpen;
 
-	// initializ the longest values to INF for all nodes exept the source node for which it's 0
+	// add all nodes to nodesToOpen, sorted by increasing level
+	for (const auto& [nodeID, node] : g->nodes) {
+        auto pos = std::upper_bound(nodesToOpen.begin(), nodesToOpen.end(), nodeID,
+				[g](const std::string& a, const std::string& b) {
+					return g->nodes[a].level < g->nodes[b].level;
+				});
+		nodesToOpen.insert(pos, nodeID);
+    }
+
+	// initialize the longest values to INF for all nodes exept the source node for which it's 0
 	for(auto it=g->nodes.begin(); it!=g->nodes.end(); it++){
 		longestValue[it->first]=INF;
 	}
 	longestValue[g->sourceNode]=0.0;
 
-	
-	nodesToOpen.insert(g->sourceNode);
-
 	double newValue;
 
-	string currentNode;
 	//core loop of the algorithm
-	while(nodesToOpen.size()>0){
-		//retrieve the first node of the list of nodes to open
-		currentNode=(*nodesToOpen.begin());
-		//for each neighbor of the node to open
-		for(auto arcIt=g->nodes[currentNode].arcs.begin(); arcIt!=g->nodes[currentNode].arcs.end(); arcIt++){
-			if(longestValue[currentNode]<INF-1){
+	for(string currentNode:nodesToOpen){
+		if(longestValue[currentNode]<INF-1){
+			//for each neighbor of the node to open
+			for(auto arcIt=g->nodes[currentNode].arcs.begin(); arcIt!=g->nodes[currentNode].arcs.end(); arcIt++){
 				//compute the new value
 				newValue=longestValue[currentNode]+coefResource*arcIt->second.resource + coefValue*arcIt->second.value;
 				//update the value and the predecessors of a node "u" if the new value is better than best value for "u" so far, or if no value exists for "u"
 				if(newValue>longestValue[arcIt->second.to] or longestValue[arcIt->second.to]>=INF-1){
-					nodesToOpen.insert(arcIt->second.to);
 					longestValue[arcIt->second.to]=newValue;
 					longestPrevious[arcIt->second.to]=currentNode;
 				}
 			}
 		}
-		nodesToOpen.erase(currentNode);
 	}
 	
 	Path p;
 	p.nodes.push_back(g->targetNode);
-	currentNode=g->targetNode;
+	string currentNode=g->targetNode;
 	while(currentNode!=g->sourceNode){
+		if(! g->nodes.contains(longestPrevious[currentNode])){
+			p.nodes.clear();
+			p.resource = 0.0;
+			p.value = -INF;
+			return p;
+		}
 		p.nodes.push_front(longestPrevious[currentNode]);
 		currentNode=longestPrevious[currentNode];
 	}

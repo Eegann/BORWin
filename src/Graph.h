@@ -12,6 +12,7 @@
 #include "list"
 #include "set"
 #include "filesystem"
+#include "algorithm"
 
 #define INF DBL_MAX
 
@@ -25,6 +26,7 @@ struct Node{
 	std::string id;
 	double minResource=0.0;
 	double maxResource=0.0;
+	int level;
 	std::unordered_map<std::string, Arc> arcs;
 };
 struct Graph{
@@ -46,7 +48,7 @@ struct HybridPath{
 
 Graph readGraph(std::string fileName);
 
-void writeGraph(Graph g, int numberNodes, std::string fileName);
+void writeGraph(Graph g, int numberNodes, std::string fileName, std::string type);
 
 void tokenize(std::string const &str, const char delim,
             std::vector<std::string> &out);

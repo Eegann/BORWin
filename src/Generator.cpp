@@ -6,20 +6,23 @@ using namespace std;
 #define MAX_RESOURCE 1000
 
 int main(int argc, char** argv){
-	if(argc!=4 and argc !=6){
-        cerr << "usage: "<< argv[0]<<"\n\t numberNodes : (int) number of nodes in the graph, at least 3" << "\n\t density : (double) density of the graph, between 0 and 1" << "\n\t numberLevels : (int) nb of maximum levels in the graph, between 3 and numberNodes" << endl;
-		cerr << "\t [optionnal] maxValue : (int) maximum value on an arc\n\t [optionnal] maxResource : (int) maximum resource on an arc" << endl;
+	if(argc!=5 and argc !=6){
+        cerr << "usage: "<< argv[0] << "\n\t numberInstances : (int) number of instances to generate" << "\n\t numberNodes : (int) number of nodes in the graph, at least 3" << "\n\t density : (double) density of the graph, between 0 and 1" << "\n\t numberLevels : (int) nb of maximum levels in the graph, between 3 and numberNodes" << endl;
+		cerr << "\t [optionnal] maxValue : (int) maximum value on an arc (base value = 1000)\n\t [optionnal] maxResource : (int) maximum resource on an arc (base value = 1000)" << endl;
 		return -1;
 	}
-	int numberNodes = atoi(argv[1]);
-	double density = atof(argv[2]);
-	int numberLevels = atoi(argv[3]);
+	int numberInstances = atoi(argv[1]);
+	int numberNodes = atoi(argv[2]);
+	double density = atof(argv[3]);
+	int numberLevels = atoi(argv[4]);
 	double maxValue = MAX_VALUE;
 	double maxResource = MAX_RESOURCE;
-	if(argc == 6){
-		maxValue = atof(argv[4]);
-		maxResource = atof(argv[4]);
+	if(argc == 7){
+		maxValue = atof(argv[5]);
+		maxResource = atof(argv[5]);
 	}
+	if(numberInstances < 1)
+		cerr << "numberInstances = " << numberInstances << " should be at least 1" << endl;
 	if(numberNodes < 3)
 		cerr << "numberNodes = " << numberNodes << " should be at least 3" << endl;
 	if(density < 0 or density > 1)
@@ -30,20 +33,28 @@ int main(int argc, char** argv){
 		cerr << "numberLevels = " << numberLevels << " and numberNodes = " << numberNodes << " should be more nodes than levels" << endl;
 	
 	srand(time(0));
+	for(int i=0; i<numberInstances; i++){
 
-	Graph g = makeGraph(numberNodes, density, numberLevels, maxValue, maxResource);
+		Graph gA = makeGraph(numberNodes, density, numberLevels, maxValue, maxResource);
 
-	//printGraph(g, numberNodes);
+		makeResourceWindows(&gA);
 
-	makeResourceWindows(&g);
+		Graph gB = gA;
 
-	//printGraph(g, numberNodes);
+		makeProportionatedGraph(&gB, numberNodes);
 
-	string folderName = ("N="+to_string(numberNodes)+"_D="+to_string(density)).c_str();
-	folderName.erase(folderName.find_last_not_of('0') + 1, std::string::npos);
-	folderName = (folderName+"_L="+to_string(numberLevels)).c_str();
+		Graph gC = gA;
 
-	writeGraph(g, numberNodes, folderName);
+		makeTightBoundsGraph(&gC);
+
+		string folderName = ("N="+to_string(numberNodes)+"_D="+to_string(density)).c_str();
+		folderName.erase(folderName.find_last_not_of('0') + 1, std::string::npos);
+		folderName = (folderName+"_L="+to_string(numberLevels)).c_str();
+
+		writeGraph(gA, numberNodes, folderName, "A");
+		writeGraph(gB, numberNodes, folderName, "B");
+		writeGraph(gC, numberNodes, folderName, "C");
+	}
 }
 
 /**
@@ -83,13 +94,13 @@ Graph makeGraph(int numberNodes, double density, int numberLevels, double maxVal
 		// add the node to the graph
 		g.nodes[currentNode.id] = currentNode;
 	}
-	for(auto it=levels.begin(); it != levels.end(); it++){
-		cout << it->first << " : ";
-		for(auto itt : it->second){
-			cout << itt<< " ";
+
+	for(int level=0; level < numberLevels; level++){
+		for(string nodeID:levels[level]){
+			g.nodes[nodeID].level=level;
 		}
-		cout << endl;
 	}
+
 	for(int parentLevel=0; parentLevel < numberLevels-1; parentLevel++){
 
 		for(int childrenLevel=parentLevel+1; childrenLevel < numberLevels; childrenLevel++){
@@ -112,6 +123,21 @@ Graph makeGraph(int numberNodes, double density, int numberLevels, double maxVal
 		}
 	}
 	return g;
+}
+
+void makeProportionatedGraph(Graph* g, int numberNodes){
+	for(int id=0; id < numberNodes; id++){
+		string nodeID = to_string(id);
+		for(auto it=g->nodes[nodeID].arcs.begin(); it!=g->nodes[nodeID].arcs.end(); it++){
+			double randValue = makeRandomDouble(0.95, 1.05);
+			it-> second.value = it->second.resource * randValue; 
+		}
+	}
+}
+
+void makeTightBoundsGraph(Graph* g){
+	string targetID = g->targetNode;
+	g->nodes[targetID].maxResource = g->nodes[targetID].minResource + 0.01*(g->nodes[targetID].maxResource-g->nodes[targetID].minResource);
 }
 
 /**
@@ -138,7 +164,7 @@ void makeNewArc(Graph* g, string parentID, string childrenID, double maxValue, d
  * @param double maxValue: the maximum allowed value
  */
 double makeRandomDouble(double minValue, double maxValue){
-	return minValue + (maxValue - minValue) * (rand() % (int(maxValue)*100)) / (int(maxValue)*100);
+	return minValue + (maxValue - minValue) * rand() / RAND_MAX;
 }
 
 /**
@@ -165,8 +191,8 @@ void makeResourceWindows(Graph* g){
 		bound2 = makeRandomDouble(lowerBound, upperBound);
 	}
 
-	cout << " LB:" << lowerBound << " UB:" << upperBound << endl;
-	cout << "Bounds:" << bound1 << " " << bound2 << endl;
+	//cout << " LB:" << lowerBound << " UB:" << upperBound << endl;
+	//cout << "Bounds:" << bound1 << " " << bound2 << endl;
 
 	string targetID = g->targetNode;
 	if(bound1<bound2){

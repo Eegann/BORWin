@@ -4,11 +4,16 @@ using namespace std;
 
 
 int main(int argc, char** argv){
-	if(argc!=2){
-                cerr << "usage: "<< argv[0]<<"\n\t graphFile" << endl;
+	if(argc!=2 and argc!=3){
+		cerr << "usage: "<< argv[0]<<"\n\t graphFile" << endl;
+		cerr << "\t [optionnal] timeLimit : (int) maximum dedicated time in seconds (base value = 3600)" << endl;
 		return -1;
 	}
-        string graphFile = argv[1];
+	string graphFile = argv[1];
+	int timeLimit=3600;
+	if(argc==3){
+		timeLimit = atoi(argv[2]);
+	}
 
 	//error if file not found
 	Graph g = readGraph(graphFile);
@@ -23,7 +28,7 @@ int main(int argc, char** argv){
 	firstPhase(&g, &coefValue, &coefResource);
 	auto endFirstPhaseTime=chrono::high_resolution_clock::now();
 	cout << "### SECOND PHASE ###" << endl;
-	secondPhase(&g, coefValue, coefResource, &bestPath, &nbIter);
+	secondPhase(&g, coefValue, coefResource, &bestPath, &nbIter, timeLimit);
 	auto endSecondPhaseTime=chrono::high_resolution_clock::now();
 	double timeFirstPhase=double(chrono::duration_cast<chrono::milliseconds>(endFirstPhaseTime - startFirstPhaseTime).count())/1000;
 	double timeSecondPhase=double(chrono::duration_cast<chrono::milliseconds>(endSecondPhaseTime - endFirstPhaseTime).count())/1000;
@@ -138,7 +143,7 @@ Path getOptimisticPath(string node, Graph* g, double coefValue, double coefResou
  * @param int* nbIter: pointer to the number of iteration of the second phase
  */
 
-void secondPhase(Graph* g, double coefValue, double coefResource, Path* bestPath, int* nbIter){
+void secondPhase(Graph* g, double coefValue, double coefResource, Path* bestPath, int* nbIter, int timeLimit){
 	// will store a mapping of a node "u" with the largest aggregated value, considering coefficients "coefValue" and "coefResource" from "u" to the target vertex of "g"
 	unordered_map<string,Path> optimisticPaths;
 	// will store a mapping of a node "u" with another map, which maps a resource value "r" with the highest value of a path from the source node to "u" consuming exactly "r".
@@ -177,9 +182,12 @@ void secondPhase(Graph* g, double coefValue, double coefResource, Path* bestPath
 	while(hybridPaths.size()>0){
 		(*nbIter)++;
 		currentTime=chrono::high_resolution_clock::now();
+		if(chrono::duration_cast<chrono::seconds>(currentTime - startTime).count()>timeLimit){
+			break;
+		}
 		//Print information every 5 seconds
 		if (chrono::duration_cast<chrono::seconds>(currentTime - startTime).count()>nextPrintTime){
-			nextPrintTime+=5;
+			nextPrintTime=chrono::duration_cast<chrono::seconds>(currentTime - startTime).count()+5;
 			cout << "Max aggregatedValues: " << hybridPaths.front().aggregatedValue << " Min aggregatedValues: " << hybridPaths.back().aggregatedValue;
 			cout << " lowerBound: " << lowerBoundAggregatedValue << endl;
 		}
@@ -261,7 +269,7 @@ void secondPhase(Graph* g, double coefValue, double coefResource, Path* bestPath
 		//}
 	}
 	//Print the solution
-	cout << "\nSolution:" << endl;
+	cout << "\nBest solution found:" << endl;
 	printPath(*bestPath);
 	
 	/*
@@ -283,8 +291,12 @@ void writeData(Path bestPath, string graphFile, double timeFirstPhase, double ti
 	
 	vector<string> pathTokens;
 	tokenize(graphFile, '/', pathTokens);
-	if(pathTokens.size()>1){
-		filesystem::create_directory("../out/"+pathTokens[0]);
+	for(int i=0; i<pathTokens.size()-1; i++){
+		string output_dir="../out/";
+		for(int j=0; j<=i; j++){
+				output_dir+=pathTokens[j]+"/";
+		}
+		filesystem::create_directory(output_dir);
 	}
 
 	string fileOut = "../out/"+graphFile+".csv";

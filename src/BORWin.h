@@ -9,7 +9,7 @@ Path getOptimisticPath(std::string node, Graph* g, double coefValue, double coef
 
 void firstPhase(Graph* g, double* resCoefValue, double* resCoefResource);
 
-void secondPhase(Graph* g, double coefValue, double coefResource, Path* bestPath, int* nbIter);
+void secondPhase(Graph* g, double coefValue, double coefResource, Path* bestPath, int* nbIter, int timeLimit);
 
 void writeData(Path bestPath, std::string graphFile, double timeFirstPhase, double timeSecondPhase, int nbIter);
 
