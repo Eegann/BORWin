@@ -299,7 +299,7 @@ void writeData(Path bestPath, string graphFile, double timeFirstPhase, double ti
 		filesystem::create_directory(output_dir);
 	}
 
-	string fileOut = "../out/"+graphFile+".csv";
+	string fileOut = "../out/"+graphFile+"_BORWin.csv";
 	cout << "Result written at: " << fileOut << endl;
 
         ofstream result(fileOut.c_str(), ios::out);
