@@ -1,4 +1,9 @@
 #include "BORWin.h"
+// sleep function
+#include <iostream>
+
+// Library effective with Linux
+#include <unistd.h>
 
 using namespace std;
 
@@ -95,10 +100,9 @@ void firstPhase(Graph* g, double* resCoefValue, double* resCoefResource){
 }
 
 /**
- * Computes the path with the largest aggregated value, considering coefficients "coefValue" and "coefResource", from vertex "node" to the target vertex of "g".
- * Stores the obtained value in map "optimisticPaths" so that there is no need to compute twice the value from a same vertex.
+ * Computes the path with the largest aggregated value, considering coefficients "coefValue" and "coefResource", for each node of "g".
+ * Stores the obtained value in map "optimisticPaths".
  *
- * @param string node: starting node for the desired Path
  * @param Graph* g: pointer to the graph used
  * @param double coefValue, coefResource: coefficients for the value and the resource to compute the aggregated value
  * @param unordered_map<string,Path>* optimisticPaths: pointer to a structure mapping a node "u" and the largest aggregated value, considering coefficients "coefValue" and "coefResource" from "u" to the target vertex of "g"
@@ -106,32 +110,60 @@ void firstPhase(Graph* g, double* resCoefValue, double* resCoefResource){
  * @see secondPhase
  */
 
-Path getOptimisticPath(string node, Graph* g, double coefValue, double coefResource, unordered_map<string,Path>* optimisticPaths){
-	//Case where "node" does not exist yet in the optimistic path map, we need to compute the longest path for "node"
-	if(optimisticPaths->find(node)==optimisticPaths->end()){
-		//Create a new graph "g2" similar to "g", with "node" as the source node.
-		Graph g2;
-		g2.nodes=g->nodes;
-		g2.targetNode=g->targetNode;
-		g2.sourceNode=node;
-		//Compute the path "p" with the largest aggregated value in graph "g2".
-		Path p = longestPath(&g2, coefValue, coefResource);
-		list<string> nodes=p.nodes;
-		//One can derive, for each vertex in the longest path "p", the largest aggregated value, due to the Bellman principle.
-		for(auto nodeIt=nodes.begin(); nodeIt!=nodes.end(); nodeIt++){
-			if(optimisticPaths->find(*nodeIt)==optimisticPaths->end()){
-				(*optimisticPaths)[*nodeIt]=p;
+void computeOptimisticPaths(Graph* g, double coefValue, double coefResource, unordered_map<string,Path>* optimisticPaths){
+	int current_level = g->nodes[g->targetNode].level;
+	while(current_level>=0){
+		for(auto nodeIt=g->nodes.begin(); nodeIt!=g->nodes.end(); nodeIt++){
+			Node current_node=nodeIt->second;
+			if(current_node.level==current_level){
+				if(current_level==g->nodes[g->targetNode].level){
+					Path best_path;
+					best_path.nodes.push_back(current_node.id);
+					(*optimisticPaths)[nodeIt->second.id]=best_path;
+					/*cout << "Value:" << best_path.value << " Resource:" << best_path.resource << " Aggregated:" << coefValue*best_path.value + coefResource*best_path.resource << endl;
+					for(auto it = best_path.nodes.begin(); it != best_path.nodes.end(); it++){
+						cout << *it << "->";
+					}
+					cout << endl;*/
+				}
+				else{
+					double best_value = -INF;
+					Path best_path;
+					if(coefResource>0)
+						best_path.resource = -INF;
+					else
+						best_path.resource = INF;
+					if(coefValue>0)
+						best_path.value = -INF;
+					else
+						best_path.value = -INF;
+					for(auto arcIt=current_node.arcs.begin(); arcIt!=current_node.arcs.end(); arcIt++){
+						double current_value= 0;
+						current_value += coefResource * optimisticPaths->at(arcIt->second.to).resource + coefValue * optimisticPaths->at(arcIt->second.to).value;
+						current_value += coefResource * arcIt->second.resource + coefValue * arcIt->second.value;
+						if(current_value>coefValue * best_path.value + coefResource * best_path.resource){
+							best_value = current_value;
+							best_path.nodes.clear();
+							best_path.nodes.push_back(current_node.id);
+							for(auto it = optimisticPaths->at(arcIt->second.to).nodes.begin(); it != optimisticPaths->at(arcIt->second.to).nodes.end(); it++)
+								best_path.nodes.push_back(*it);
+							best_path.value = optimisticPaths->at(arcIt->second.to).value + arcIt->second.value;
+							best_path.resource = optimisticPaths->at(arcIt->second.to).resource + arcIt->second.resource;
+						}
+					}
+					(*optimisticPaths)[nodeIt->second.id] = best_path;
+					/*cout << "Value:" << best_path.value << " Resource:" << best_path.resource << " Aggregated:" << coefValue*best_path.value + coefResource*best_path.resource << endl;
+					for(auto it = best_path.nodes.begin(); it != best_path.nodes.end(); it++){
+						cout << *it << "->";
+					}
+					cout << endl;*/
+				}
 			}
-			if(*nodeIt!=g->targetNode){
-				auto successorIt=nodeIt;
-				successorIt++;
-				p.value-=g->nodes[*nodeIt].arcs[*successorIt].value;
-				p.resource-=g->nodes[*nodeIt].arcs[*successorIt].resource;
-			}
-			p.nodes.pop_front();
 		}
+		current_level--;
+		//sleep(1);
 	}
-	return (*optimisticPaths)[node];
+
 }
 
 /**
@@ -149,6 +181,8 @@ void secondPhase(Graph* g, double coefValue, double coefResource, Path* bestPath
 	// will store a mapping of a node "u" with another map, which maps a resource value "r" with the highest value of a path from the source node to "u" consuming exactly "r".
 	unordered_map<string,unordered_map<double,double>> bestExploredPaths;
 
+	computeOptimisticPaths(g, coefValue, coefResource, &optimisticPaths);
+
 	// will store the hybrid paths that are not dominated by decreasing aggregated value
 	list<HybridPath> hybridPaths;
 
@@ -156,7 +190,7 @@ void secondPhase(Graph* g, double coefValue, double coefResource, Path* bestPath
 	HybridPath srcHybridPath;
 
 	// heuristic part from source node to the target node of "g"
-	srcHybridPath.heuristicPart=getOptimisticPath(g->sourceNode, g, coefValue, coefResource, &optimisticPaths);
+	srcHybridPath.heuristicPart=optimisticPaths[g->sourceNode];
 	// feasible part only with the source node
 	srcHybridPath.feasiblePart.nodes.push_back(g->sourceNode);
 	// value and resource at the source node = 0
@@ -251,7 +285,8 @@ void secondPhase(Graph* g, double coefValue, double coefResource, Path* bestPath
 
 					//If the feasible part is indeed feasible, we compute the heuristic part and add the new hybrid path in the hybridPaths list
 					if(newHybridPath.feasiblePart.resource>=g->nodes[newSuccessor].minResource and newHybridPath.feasiblePart.resource<=g->nodes[newSuccessor].maxResource){
-						newHybridPath.heuristicPart=getOptimisticPath(newSuccessor, g, coefValue, coefResource, &optimisticPaths);
+						newHybridPath.heuristicPart=optimisticPaths[newSuccessor];
+
 						newHybridPath.aggregatedValue=coefValue*(newHybridPath.feasiblePart.value+newHybridPath.heuristicPart.value);
 						newHybridPath.aggregatedValue+=coefResource*(newHybridPath.feasiblePart.resource+newHybridPath.heuristicPart.resource);
 						if(newHybridPath.aggregatedValue>=lowerBoundAggregatedValue){
