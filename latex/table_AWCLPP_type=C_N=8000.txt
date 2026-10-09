@@ -1,0 +1,46 @@
+\begin{table}
+\begin{center}
+\begin{tabular}{r|r||S[table-format=7.2]|S[table-format=1.2]|S[table-format=4.1]|r||S[table-format=7.2]|S[table-format=4.1]|r}
+	 & & \multicolumn{4}{c||}{CPLEX} & \multicolumn{3}{c}{BORWin} \\
+	\text{P} & \text{instance} & \text{value} & \text{gap} & \text{time} & \text{\#nodes} & \text{value} & \text{time} & \text{\#iter} \\
+	\hline
+	\hline
+	\multirow{10}{*}{0.01} & 1 & 54934.10 & 0.00 & 112.78 & 0 & 54934.10 & 3.3 & 11\\
+	 & 2 & 56656.80 & 0.00 & 148.41 & 406 & \text{-} & TO & 0\\
+	 & 3 & 45227.90 & 0.00 & 171.64 & 140 & 45227.90 & 5.2 & 151\\
+	 & 4 & 55843.50 & 0.00 & 355.53 & 260 & 55843.50 & 20.7 & 68\\
+	 & 5 & 50542.00 & -0.00 & 193.46 & 77 & 50542.00 & 27.5 & 138\\
+	 & 6 & 54404.10 & 0.00 & 354.21 & 653 & 54404.10 & 523.0 & 264\\
+	 & 7 & 14381.40 & 0.00 & 444.64 & 38 & 14381.40 & 2.8 & 5\\
+	 & 8 & 11924.70 & 0.00 & 386.55 & 0 & 11924.70 & 2.7 & 14\\
+	 & 9 & 36042.10 & -0.00 & 104.34 & 0 & 36042.10 & 2.9 & 7\\
+	 & 10 & 43903.70 & -0.00 & 107.45 & 59 & 43903.70 & 15.0 & 112\\
+	\hline
+	\hline
+	\multirow{10}{*}{0.1} & 1 & \text{-} & \text{-} & TO & 0 & 92806.20 & 67.4 & 17\\
+	 & 2 & \text{-} & \text{-} & TO & 0 & 91484.40 & 205.8 & 67\\
+	 & 3 & \text{-} & \text{-} & TO & 0 & 93055.30 & 39.8 & 8\\
+	 & 4 & \text{-} & \text{-} & TO & 0 & \text{-} & TO & 22\\
+	 & 5 & \text{-} & \text{-} & TO & 0 & \text{-} & TO & 9\\
+	 & 6 & \text{-} & \text{-} & TO & 0 & \text{-} & TO & 10\\
+	 & 7 & \text{-} & \text{-} & TO & 0 & 90106.50 & 213.1 & 6\\
+	 & 8 & \text{-} & \text{-} & TO & 0 & 93157.10 & 78.6 & 16\\
+	 & 9 & \text{-} & \text{-} & TO & 0 & 69913.60 & 36.5 & 66\\
+	 & 10 & \text{-} & \text{-} & TO & 0 & \text{-} & TO & 23\\
+	\hline
+	\hline
+	\multirow{10}{*}{0.25} & 1 & \text{-} & \text{-} & TO & 0 & \text{-} & TO & 4\\
+	 & 2 & \text{-} & \text{-} & TO & 0 & \text{-} & TO & 4\\
+	 & 3 & \text{-} & \text{-} & TO & 0 & \text{-} & TO & 6\\
+	 & 4 & \text{-} & \text{-} & TO & 0 & 96177.70 & TO & 3\\
+	 & 5 & \text{-} & \text{-} & TO & 0 & \text{-} & TO & 4\\
+	 & 6 & \text{-} & \text{-} & TO & 0 & 75056.20 & 165.7 & 55\\
+	 & 7 & \text{-} & \text{-} & TO & 0 & 92118.80 & 170.4 & 17\\
+	 & 8 & \text{-} & \text{-} & TO & 0 & 96463.70 & 168.0 & 4\\
+	 & 9 & \text{-} & \text{-} & TO & 0 & \text{-} & TO & 4\\
+	 & 10 & \text{-} & \text{-} & TO & 0 & \text{-} & TO & 6\\
+\end{tabular}
+\end{center}
+\caption{Performance of the ILP model and BORWin for instances type C of the AWCLPP with 8000 nodes}
+\label{tab:res_awclpp_b3}
+\end{table}
